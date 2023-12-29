@@ -1,6 +1,6 @@
 /* eslint-disable complexity, max-statements, max-params */
 import type {Device} from '@luma.gl/core';
-import {Transform} from '@luma.gl/engine';
+import {BufferTransform as LumaTransform} from '@luma.gl/engine';
 import {readPixelsToArray} from '@luma.gl/webgl';
 import {GL} from '@luma.gl/constants';
 import {
@@ -15,7 +15,6 @@ import Attribute from '../lib/attribute/attribute';
 import Transition from './transition';
 
 import type {Timeline} from '@luma.gl/engine';
-import type {Transform as LumaTransform} from '@luma.gl/engine';
 import type {
   Buffer as LumaBuffer,
   Framebuffer as LumaFramebuffer,
@@ -130,7 +129,6 @@ export default class GPUSpringTransition implements GPUTransition {
     if (!updated) {
       return false;
     }
-    const settings = this.settings as SpringTransitionSettings;
 
     transform.update({
       sourceBuffers: {
@@ -141,21 +139,16 @@ export default class GPUSpringTransition implements GPUTransition {
         vNext: buffers[2]
       }
     });
+
+    transform.model.setUniforms({
+      stiffness: this.settings!.stiffness,
+      damping: this.settings!.damping
+    });
+
     transform.run({
       framebuffer,
       discard: false,
-      clearRenderTarget: true,
-      uniforms: {
-        stiffness: settings.stiffness,
-        damping: settings.damping
-      },
-      parameters: {
-        depthTest: false,
-        blend: true,
-        viewport: [0, 0, 1, 1],
-        blendFunc: [GL.ONE, GL.ONE],
-        blendEquation: [GL.MAX, GL.MAX]
-      }
+      clearColor: [0, 0, 0, 0]
     });
 
     cycleBuffers(buffers);
@@ -193,9 +186,15 @@ function getTransform(
   framebuffer: LumaFramebuffer
 ): LumaTransform {
   const attributeType = getAttributeTypeFromSize(attribute.size);
-  return new Transform(device, {
-    framebuffer,
-    vs: `
+  return new LumaTransform(device, {
+    parameters: {
+      depthCompare: 'always',
+      blendColorOperation: 'max',
+      blendAlphaOperation: 'max',
+      blendColorSrcFactor: 'one',
+      blendColorDstFactor: 'one'
+    },
+    vs: `\
 #define SHADER_NAME spring-transition-vertex-shader
 
 #define EPSILON 0.00001

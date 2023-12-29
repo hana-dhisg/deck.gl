@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 import type {Device, DeviceFeature} from '@luma.gl/core';
-import {Model, Transform} from '@luma.gl/engine';
+import {Model, TextureTransform} from '@luma.gl/engine';
 import {fp64arithmetic} from '@luma.gl/shadertools';
 import {readPixelsToBuffer, withGLParameters, clear} from '@luma.gl/webgl';
 import {GL} from '@luma.gl/constants';
@@ -467,15 +467,27 @@ export default class GPUGridAggregator {
     if (operation === AGGREGATION_OPERATION.MEAN) {
       const {meanTextures, textures} = this.state;
       const transformOptions = {
-        _sourceTextures: {aggregationValues: meanTextures[id]}, // contains aggregated data
-        _targetTexture: textures[id], // store mean values,
+        bindings: {aggregationValues: meanTextures[id]}, // contains aggregated data
+        targetTexture: textures[id], // store mean values,
         elementCount: textures[id].width * textures[id].height
       };
+      // TODO(donmccurdy): Avoid .update(), but don't recreate on every frame.
+      // if (this.meanTransform) {
+      //   this.meanTransform.update(transformOptions);
+      // } else {
+      //   this.meanTransform = getMeanTransform(this.device, transformOptions);
+      // }
       if (this.meanTransform) {
-        this.meanTransform.update(transformOptions);
-      } else {
-        this.meanTransform = getMeanTransform(this.device, transformOptions);
+        this.meanTransform.destroy();
       }
+
+      this.meanTransform = new TextureTransform(this.device, {
+        vs: TRANSFORM_MEAN_VS,
+        targetTextureVarying: 'meanValues',
+        targetTextureChannels: 4, // TODO(donmccurdy): Correct?
+        ...transformOptions
+      });
+
       this.meanTransform.run({
         parameters: {
           blend: false,
@@ -692,13 +704,5 @@ function getAllAggregationModel(device: Device, instanceCount: number): Model {
       // @ts-expect-error
       position: [0, 0]
     }
-  });
-}
-
-function getMeanTransform(device: Device, opts) {
-  return new Transform(device, {
-    vs: TRANSFORM_MEAN_VS,
-    _targetTextureVarying: 'meanValues',
-    ...opts
   });
 }
