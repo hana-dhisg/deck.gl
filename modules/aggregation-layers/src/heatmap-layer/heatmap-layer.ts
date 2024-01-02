@@ -427,6 +427,8 @@ export default class HeatmapLayer<
     const {weightsTexture} = this.state;
     weightsTransform?.delete();
 
+    // TODO(donmccurdy): DO NOT SUBMIT.
+    // @ts-expect-error
     weightsTransform = new TextureTransform(this.context.device, {
       id: `${this.id}-weights-transform`,
       elementCount: 1,

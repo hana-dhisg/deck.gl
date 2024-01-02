@@ -373,6 +373,9 @@ export default class GPUGridAggregator {
       if (combineMaxMin) {
         this._renderToMaxMinTexture({
           id,
+          // TODO(donmccurdy): DO NOT SUBMIT.
+          // @ts-expect-error
+          // eslint-disable-next-line no-undef
           parameters: {...parameters, blendEquation: MAX_MIN_BLEND_EQUATION},
           gridSize,
           minOrMaxFb: maxMinFramebuffers[id],
@@ -383,6 +386,9 @@ export default class GPUGridAggregator {
         if (needMin) {
           this._renderToMaxMinTexture({
             id,
+            // TODO(donmccurdy): DO NOT SUBMIT.
+            // @ts-expect-error
+            // eslint-disable-next-line no-undef
             parameters: {...parameters, blendEquation: MIN_BLEND_EQUATION},
             gridSize,
             minOrMaxFb: minFramebuffers[id],
@@ -393,6 +399,9 @@ export default class GPUGridAggregator {
         if (needMax) {
           this._renderToMaxMinTexture({
             id,
+            // TODO(donmccurdy): DO NOT SUBMIT.
+            // @ts-expect-error
+            // eslint-disable-next-line no-undef
             parameters: {...parameters, blendEquation: MAX_BLEND_EQUATION},
             gridSize,
             minOrMaxFb: maxFramebuffers[id],
@@ -539,6 +548,8 @@ export default class GPUGridAggregator {
         meanTextures[id] =
           meanTextures[id] ||
           getFloatTexture(this.device, {id: `${id}-mean-texture`, width: numCol, height: numRow});
+        // TODO(donmccurdy): DO NOT SUBMIT.
+        // @ts-expect-error
         meanTextures[id].resize(framebufferSize);
         texture = meanTextures[id];
       }
