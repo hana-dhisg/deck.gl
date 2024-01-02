@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import type {BlendFactor, BlendOperation, Device, DeviceFeature, Texture} from '@luma.gl/core';
+import type {ColorParameters, Device, DeviceFeature, Texture} from '@luma.gl/core';
 import {Model, TextureTransform} from '@luma.gl/engine';
 import {fp64arithmetic} from '@luma.gl/shadertools';
 import {readPixelsToBuffer} from '@luma.gl/webgl';
@@ -470,9 +470,9 @@ export default class GPUGridAggregator {
           targetTexture: textures[id], // store mean values,
           targetTextureVarying: 'meanValues',
           targetTextureChannels: 4, // TODO(donmccurdy): Correct?
-          elementCount: textures[id].width * textures[id].height,
+          vertexCount: textures[id].width * textures[id].height,
           parameters: {
-            depthCompare: 'always'
+            depthCompare: 'always',
             // TODO(donmccurdy): Why was `blend: false` previously here?
           }
         });
@@ -487,24 +487,20 @@ export default class GPUGridAggregator {
   }
 
   _getBlendParameters(weights: Record<string, any>): ColorParameters {
-    let blendColorOperation: BlendOperation;
-    let blendColorSrcFactor: BlendFactor;
-    let blendColorDstFactor: BlendFactor;
-
-    let blendAlphaOperation: BlendOperation;
-    let blendAlphaSrcFactor: BlendFactor;
-    let blendAlphaDstFactor: BlendFactor;
+    const params = {} as ColorParameters;
 
     for (const id in weights) {
       const {needMin, needMax, combineMaxMin} = weights[id];
       if (combineMaxMin) {
-        blendColorOperation = 'max';
-        blendAlphaOperation = 'min';
+        params.blendColorOperation = 'max';
+        params.blendAlphaOperation = 'min';
       } else {
-        if (
+        // TODO(donmccurdy): Remaining blend parameters.
       }
       
     }
+
+    return params;
   }
 
   _runAggregation(opts) {
